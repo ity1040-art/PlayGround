@@ -537,3 +537,8 @@ body {
   #grain { animation: none; }
   .fog-a, .fog-b { animation: none; }
 }
+
+/* Touch screens need the on-screen controls even on tablet-sized viewports. */
+@media (pointer: coarse), (any-pointer: coarse) {
+  #touch-controls { display: block; }
+}

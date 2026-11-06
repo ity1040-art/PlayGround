@@ -207,7 +207,7 @@ let runTimer = 0;
 let deathHandled = false;
 
 const player = {
-  pos: new THREE.Vector3(0, 0, 11.6),
+  pos: new THREE.Vector3(0, 0, 10.4),
   vel: new THREE.Vector2(),
   yaw: 0,
   pitch: 0,
@@ -1031,7 +1031,7 @@ function resetGame() {
   thunderTimer = 20 + Math.random() * 12;
   lightningGlow = 0;
 
-  player.pos.set(0, 0, 11.6);
+  player.pos.set(0, 0, 10.4);
   player.vel.set(0, 0);
   player.yaw = 0;
   player.pitch = 0;
@@ -1102,6 +1102,7 @@ function handleCaught() {
   audio.jumpscare();
   world.triggerBlackout(0.1);
   flashlight.intensity = 0;
+  if (document.pointerLockElement === canvas) document.exitPointerLock?.();
   jumpscare.classList.add('show');
   flashDamage(0.9, 120, 'rgba(120,0,0,.95)');
   // violent camera shake behind the overlay
@@ -1111,6 +1112,7 @@ function handleCaught() {
 function showEnd(win) {
   jumpscare.classList.remove('show');
   state = win ? 'won' : 'dead';
+  if (document.pointerLockElement === canvas) document.exitPointerLock?.();
   hud.classList.add('hidden');
   endScreen.classList.remove('hidden');
   endScreen.classList.toggle('win', win);
@@ -1133,7 +1135,6 @@ function showEnd(win) {
     endCopy.textContent = 'Your breath was the only thing louder than her footsteps.';
     endQuote.textContent = '“You should not have taken the first candle.”';
     againBtn.querySelector('span').textContent = 'TRY AGAIN';
-    audio.setMuted(false);
   }
 }
 
@@ -1164,6 +1165,9 @@ function togglePause(force) {
     hud.style.filter = '';
     if (audio.ctx) audio.ctx.resume();
     clock.getDelta();
+    if (!isTouch && !isMobile && document.pointerLockElement !== canvas) {
+      canvas.requestPointerLock?.();
+    }
   }
 }
 
@@ -1335,7 +1339,12 @@ canvas.addEventListener('click', () => {
   }
 });
 document.addEventListener('pointerlockchange', () => {
-  input.pointerLock = document.pointerLockElement === canvas;
+  const locked = document.pointerLockElement === canvas;
+  const wasLocked = input.pointerLock;
+  input.pointerLock = locked;
+  // Esc releases the pointer before the page sees a keydown, so treat losing
+  // the lock as a pause request while a run is in progress.
+  if (!locked && wasLocked && state === 'playing') togglePause(true);
 });
 document.addEventListener('mousemove', (e) => {
   if (state !== 'playing') return;
@@ -1449,8 +1458,6 @@ muteBtn.addEventListener('click', () => {
 startBtn.addEventListener('click', startGame);
 againBtn.addEventListener('click', () => {
   endScreen.classList.add('hidden');
-  audio.setMuted(false);
-  muteBtn.textContent = 'SOUND: ON';
   state = 'playing';
   resetGame();
   setTimeout(() => showSubtitle('The house remembers you. It will be harder to hide.', 3800), 2400);
@@ -1483,9 +1490,9 @@ setInterval(() => {
 }, 1200);
 
 // intro control text
-if (isTouch) {
-  $('intro-controls').textContent = 'Left stick to move · drag to look · ✦ to act · RUN to sprint';
-}
+$('intro-controls').textContent = isTouch
+  ? 'Left stick to move · drag to look · ✦ to act · RUN to sprint'
+  : 'WASD to move · mouse to look · E to act · F for the torch';
 
 // boot
 drawScareFace();

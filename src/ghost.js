@@ -160,6 +160,7 @@ export class Ghost {
 
   setDormantLook() {
     this.aura.material.opacity = 0.07;
+    this.aura.material.color.setHex(0x7fa9a0);
     this.light.intensity = 0.9;
     this.eyeMat.color.setHex(0x9a231a);
   }
@@ -176,12 +177,16 @@ export class Ghost {
     this.active = false;
     this.final = false;
     this.caught = false;
+    this.intensity = 0;
     this.position.copy(HOME);
     this.group.position.copy(HOME);
     this.group.rotation.set(0, 0, 0);
     this.velocity.set(0, 0, 0);
     this.chaseLost = 0;
     this.searchTimer = 0;
+    this.targetTimer = 0;
+    this.whisperTimer = 0;
+    this.teleportCooldown = 0;
     this.group.visible = true;
     this.dressMat.opacity = 0.8;
     this.skinMat.opacity = 0.94;
