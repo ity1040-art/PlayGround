@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#030608" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <title>Hollow House — Escape the Ghost</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23030608'/%3E%3Cpath d='M32 10c6 9 11 15 11 23a11 11 0 0 1-22 0c0-5 3-8 6-11 1 4 3 6 5 7-1-7-2-12 0-19z' fill='%23e8c98a'/%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div id="app">
+    <canvas id="game-canvas" aria-label="3D haunted house game"></canvas>
+    <div id="grain" aria-hidden="true"></div>
+    <div id="vignette" aria-hidden="true"></div>
+    <div id="danger-vignette" aria-hidden="true"></div>
+    <div id="lightning-flash" aria-hidden="true"></div>
+    <div id="damage-flash" aria-hidden="true"></div>
+
+    <div id="boot">
+      <div class="boot-candle"><i></i></div>
+      <p>LIGHTING THE CANDLES…</p>
+    </div>
+
+    <!-- ── Title ─────────────────────────────────────────────── -->
+    <section id="title-screen" class="screen">
+      <div class="title-fog fog-a"></div>
+      <div class="title-fog fog-b"></div>
+      <div class="title-content">
+        <p class="eyebrow">A NIGHT IN</p>
+        <h1>HOLLOW<br /><span>HOUSE</span></h1>
+        <p class="korean">귀신의 집에서 탈출하라</p>
+        <div class="ornament"><i></i><b>✦</b><i></i></div>
+        <p class="tagline">Three black candles. One sealed door.<br /><em>She is already awake.</em></p>
+        <button id="start-btn" class="ritual-btn" type="button"><span>ENTER THE HOUSE</span></button>
+        <p class="headphones">🎧 HEADPHONES RECOMMENDED</p>
+        <div class="control-legend">
+          <span><b>MOVE</b> WASD / left stick</span>
+          <span><b>LOOK</b> mouse / drag</span>
+          <span><b>USE</b> E / ✦</span>
+          <span><b>LIGHT</b> F / torch</span>
+        </div>
+      </div>
+      <p class="title-foot">SURVIVE THE NIGHT · FIND THE CANDLES · DO NOT LET HER TOUCH YOU</p>
+    </section>
+
+    <!-- ── Intro ─────────────────────────────────────────────── -->
+    <section id="intro-overlay" class="screen hidden" aria-live="polite">
+      <div class="intro-box">
+        <p class="intro-kicker">THE DOOR HAS SEALED BEHIND YOU</p>
+        <h2>Three black candles<br />hold the house shut.</h2>
+        <p>Find them. Light the seal. Run.<br /><em>And whatever you hear in the dark — do not answer it.</em></p>
+        <p class="intro-controls" id="intro-controls">Left stick to move · drag to look · ✦ to interact</p>
+      </div>
+    </section>
+
+    <!-- ── HUD ───────────────────────────────────────────────── -->
+    <div id="hud" class="hidden">
+      <header id="top-hud">
+        <div id="objective-panel">
+          <p class="hud-label">RITUAL</p>
+          <p id="objective-text">Find the three black candles</p>
+        </div>
+
+        <div id="compass" aria-label="Candle compass">
+          <div class="compass-ring"></div>
+          <div id="compass-arrow"></div>
+          <div class="compass-dot"></div>
+          <span id="compass-label">CANDLE</span>
+          <span id="compass-dist">--</span>
+        </div>
+
+        <div id="relic-panel" aria-label="Candles found">
+          <div class="relic-slot" data-slot="0"><span>✦</span></div>
+          <div class="relic-slot" data-slot="1"><span>✦</span></div>
+          <div class="relic-slot" data-slot="2"><span>✦</span></div>
+        </div>
+      </header>
+
+      <div id="room-toast"></div>
+      <div id="subtitle"></div>
+
+      <div id="crosshair"><i></i><i></i><i></i><i></i><b></b></div>
+      <div id="interact-prompt" class="hidden"><span class="key">✦</span><span id="interact-text">USE</span></div>
+
+      <div id="stamina-wrap"><div id="stamina-bar"></div><span>BREATH</span></div>
+
+      <button id="pause-btn" class="icon-btn" type="button" aria-label="Pause">Ⅱ</button>
+
+      <div id="touch-controls">
+        <div id="joystick-zone">
+          <div id="joystick-base"><div id="joystick-knob"></div></div>
+          <div id="sprint-btn" class="round-btn small" role="button" aria-label="Sprint"><span>RUN</span></div>
+        </div>
+        <div id="action-cluster">
+          <button id="light-btn" class="round-btn small" type="button" aria-label="Toggle flashlight"><span class="torch-icon">⌁</span><small>LIGHT</small></button>
+          <button id="use-btn" class="round-btn use" type="button" aria-label="Use"><span>✦</span><small>USE</small></button>
+        </div>
+      </div>
+
+      <div id="hide-overlay">
+        <div class="slats"></div>
+        <p>HOLD YOUR BREATH · <b>✦ LEAVE</b></p>
+      </div>
+    </div>
+
+    <!-- ── Pause ─────────────────────────────────────────────── -->
+    <section id="pause-screen" class="screen hidden">
+      <div class="modal-box">
+        <p class="modal-kicker">THE HOUSE WAITS</p>
+        <h2>PAUSED</h2>
+        <p class="modal-copy">She does not move while you are still.<br /><em>Probably.</em></p>
+        <button id="resume-btn" class="ritual-btn" type="button"><span>CONTINUE</span></button>
+        <button id="mute-btn" class="ghost-btn" type="button">SOUND: ON</button>
+      </div>
+    </section>
+
+    <!-- ── Jumpscare ─────────────────────────────────────────── -->
+    <div id="jumpscare" aria-hidden="true">
+      <canvas id="scare-canvas" width="512" height="768"></canvas>
+      <div class="scare-vignette"></div>
+      <div class="scare-grain"></div>
+    </div>
+
+    <!-- ── End screens ───────────────────────────────────────── -->
+    <section id="end-screen" class="screen hidden">
+      <div class="modal-box end-box">
+        <p class="modal-kicker" id="end-kicker">THE HOUSE KEEPS YOU</p>
+        <h2 id="end-title">SHE FOUND YOU</h2>
+        <p class="modal-copy" id="end-copy">Your breath was the only thing louder than her footsteps.</p>
+        <div class="end-stats" id="end-stats"></div>
+        <button id="again-btn" class="ritual-btn" type="button"><span>TRY AGAIN</span></button>
+        <p class="end-quote" id="end-quote">“You should not have taken the first candle.”</p>
+      </div>
+    </section>
+
+    <div id="rotate-hint" class="hidden">↻ Turn your device for a wider view</div>
+  </div>
+
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>
